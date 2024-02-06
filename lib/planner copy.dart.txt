@@ -1,0 +1,227 @@
+import 'package:flutter/material.dart';
+//import 'package:flutter_remix/flutter_remix.dart';
+import 'package:goodlivelauncher/activity.dart';
+import 'package:goodlivelauncher/iconshandler.dart';
+import 'package:goodlivelauncher/setStateController.dart';
+import 'package:device_apps/device_apps.dart';
+
+enum Intervals { alarm, interval }
+
+class Planner extends StatefulWidget {
+  final SetStateController planercontroller;
+  final Activities activities;
+  const Planner(
+      {super.key, required this.activities, required this.planercontroller});
+  @override
+  State<Planner> createState() => _PlannerState(planercontroller);
+}
+
+class _PlannerState extends State<Planner> {
+  _PlannerState(SetStateController planercontroller) {
+    planercontroller.plannerSetState = update;
+  }
+  IconsHandler iconhandler = IconsHandler();
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: ListView.builder(
+
+          //cacheExtent: 20,
+          shrinkWrap: true,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          itemCount: widget.activities.list.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Dismissible(
+                secondaryBackground: const Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(
+                      Icons.edit_outlined,
+                      size: 40,
+                      color: Colors.orangeAccent,
+                    ),
+                    SizedBox(
+                      width: 30,
+                    ),
+                  ],
+                ),
+                background: const Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 30,
+                    ),
+                    Icon(
+                      Icons.delete_outline,
+                      size: 40,
+                      color: Colors.redAccent,
+                    ),
+                  ],
+                ),
+                key: UniqueKey(),
+                direction: DismissDirection.startToEnd,
+                onDismissed: (direction) {
+                  if (direction == DismissDirection.startToEnd) {
+                    showDialogSimple(
+                        context,
+                        "¿Eliminar?",
+                        '"${widget.activities.list[index].name}"',
+                        () {
+                          setState(() {});
+                        },
+                        "Cancelar",
+                        () {
+                          widget.activities.removeAt(index);
+                        },
+                        "Confirmar");
+                  } else if (direction == DismissDirection.endToStart) {
+                    showDialogSimple(context, "¿Editar?",
+                        '"${widget.activities.list[index].name}"', () {
+                      setState(() {});
+                    }, "Cancelar", () {}, "Confirmar");
+                  }
+                },
+                child: SizedBox(
+                  width: double.infinity,
+                  child: cardActitivity(index),
+                ));
+          }),
+    );
+  }
+
+  Widget cardActitivity(int index) {
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(4.5),
+      ),
+      elevation: 0,
+      color: const Color.fromARGB(11, 0, 0, 0),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.activities.list[index].name,
+                ),
+                widget.activities.list[index].type == "alarm"
+                    ? Text(
+                        "${widget.activities.list[index].days.toString().replaceAll(",", "").replaceFirst('[', "").replaceFirst("]", "")} · ${widget.activities.list[index].alarm!.hour}:${widget.activities.list[index].alarm!.minute}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      )
+                    : Row(
+                        children: [
+                          Text(
+                            "${widget.activities.list[index].days.toString().replaceAll(",", "").replaceFirst('[', "").replaceFirst("]", "")} · ${widget.activities.list[index].start!.hour}:${widget.activities.list[index].start!.minute}-${widget.activities.list[index].end!.hour}:${widget.activities.list[index].end!.minute}",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
+              ],
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text(
+              '"${widget.activities.list[index].description}"',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            //Text(widget.activities.list[index].apps.toString()),
+            if (widget.activities.list[index].type == "alarm")
+              Icon(
+                iconhandler
+                    .mapicon[widget.activities.list[index].iconname]?.icon,
+                color: Colors.black,
+              ),
+            if (widget.activities.list[index].type != "alarm")
+              SizedBox(
+                height: 50,
+                child: ListView(
+                  shrinkWrap: true,
+                  scrollDirection: Axis.horizontal,
+                  children: [...showapps(widget.activities.list[index].apps!)],
+                ),
+              ),
+            Container(
+              color: widget.activities.list[index].color,
+              height: 1,
+              width: 200,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<Widget> showapps(List<String> apps) {
+    List<Widget> appsl = [];
+    for (var i = 0; i < widget.activities.applications.length; i++) {
+      if (apps.contains(widget.activities.applications[i].packageName)) {
+        final application = widget.activities.applications[i] as ApplicationWithIcon;
+        appsl.add(InkWell(
+          onTap: () {
+             DeviceApps.openApp(application.packageName);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Image.memory(application.icon),
+          ),
+        ));
+      }
+    }
+    return appsl;
+    //
+  }
+
+  update() {
+    setState(() {});
+  }
+
+  void showDialogSimple(
+      BuildContext context,
+      String message,
+      String description,
+      VoidCallback onCancel,
+      String cancelMessage,
+      VoidCallback onConfirm,
+      String confirmMessage) {
+    showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: Text(
+          message,
+        ),
+        content: Text(
+          description,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                onCancel();
+              },
+              child: Text(cancelMessage)),
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                onConfirm();
+              },
+              child: Text(confirmMessage)),
+        ],
+      ),
+    );
+  }
+}

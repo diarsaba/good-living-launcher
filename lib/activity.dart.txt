@@ -1,0 +1,289 @@
+import 'dart:io';
+import 'package:device_apps/device_apps.dart';
+import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:convert';
+import 'package:objectbox/objectbox.dart';
+
+//import 'package:flame/components.dart';
+class Activity {
+  String name;
+  String description;
+
+  String type;
+
+  Color? color;
+
+  String? date;
+
+  TimeOfDay? alarm;
+  TimeOfDay? start;
+  TimeOfDay? end;
+  int? timeinteval;
+  int? startmin;
+  int? endmin;
+
+  String? iconname;
+
+  List<String>? apps;
+
+  List<String>? days;
+
+  Activity(
+      {required this.name,
+      required this.description,
+      required this.type,
+      this.alarm,
+      this.start,
+      this.end,
+      this.timeinteval,
+      this.color,
+      this.iconname,
+      this.apps,
+      this.days,
+      this.date});
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'description': description,
+        'type': type,
+        'alarm': {
+          'hour': alarm?.hour,
+          'minute': alarm?.minute,
+        },
+        'start': {
+          'hour': start?.hour,
+          'minute': start?.minute,
+        },
+        'end': {
+          'hour': end?.hour,
+          'minute': end?.minute,
+        },
+        'timeinteval': timeinteval,
+        'color': color
+            ?.value, //color.toString().replaceFirst("Color(", "").replaceFirst(")", "")
+        'iconname': iconname,
+        'apps': apps,
+        'days': days,
+        'date': date
+      };
+}
+
+class Activities {
+  List<Application> applications = [];
+  late List<Application> selected = [];
+
+  late String currentCodeDate;
+  late int currentday;
+
+  final String name;
+  final String uuid;
+  final String password;
+
+
+  List<Activity> list = [];
+
+  late List<Activity> fulldata = [];
+
+  late List<Color> colorList = [];
+
+  List<String> weekdays_ = ["L", "M", "X", "J", "V", "S", "D"];
+
+  Activities({
+    required this.name,
+    required this.uuid,
+    required this.password
+  }) {
+    _read();
+  }
+
+  _read() async {
+    late String text = "[]";
+    try {
+      final Directory directory = await getApplicationDocumentsDirectory();
+      final File file = File('${directory.path}/$name.txt');
+      //print('${directory.path}/$name.txt');
+      text = await file.readAsString();
+      // ignore: empty_catches
+    } catch (e) {}
+
+    final List<dynamic> json_ = json.decode(text);
+
+    for (var i = 0; i < json_.length; i++) {
+      if (json_[i]["type"] == "alarm") {
+        fulldata.add(Activity(
+          name: json_[i]["name"],
+          description: json_[i]["description"],
+          type: json_[i]["type"],
+          alarm: TimeOfDay(
+              hour: json_[i]["alarm"]["hour"],
+              minute: json_[i]["alarm"]["minute"]),
+          iconname: json_[i]["iconname"],
+          days: json_[i]["days"].cast<String>(),
+          date: json_[i]["date"],
+        ));
+      } else {
+        final ac = Activity(
+          apps: json_[i]["apps"].cast<String>(),
+          name: json_[i]["name"],
+          description: json_[i]["description"],
+          type: json_[i]["type"],
+          start: TimeOfDay(
+              hour: json_[i]["start"]["hour"],
+              minute: json_[i]["start"]["minute"]),
+          end: TimeOfDay(
+              hour: json_[i]["end"]["hour"], minute: json_[i]["end"]["minute"]),
+          timeinteval: json_[i]["timeinteval"],
+          color: Color(json_[i]["color"]),
+          days: json_[i]["days"].cast<String>(),
+          date: json_[i]["date"],
+        );
+        fulldata.add(ac);
+
+        ac.startmin = ac.start!.hour * 60 + ac.start!.minute;
+        ac.endmin = ac.end!.hour * 60 + ac.end!.minute;
+      }
+    }
+
+    DateTime dateTime = DateTime.now();
+    String code =
+        "${dateTime.day}${dateTime.weekday}${dateTime.month}${dateTime.year}";
+    showactivities(code: code, day: dateTime.weekday - 1);
+    // statecontroller.plannerSetState();
+    // statecontroller.solarSetState();
+  }
+
+  showactivities({String code = "", int day = -1}) {
+    if (code.isNotEmpty) {
+      currentCodeDate = code;
+    }
+    if (day != -1) {
+      currentday = day;
+    }
+
+    list = [];
+    for (var i = 0; i < fulldata.length; i++) {
+      if (fulldata[i].days!.isEmpty) {
+        if (fulldata[i].date == currentCodeDate) {
+          list.add(fulldata[i]);
+        }
+      } else {
+        if (fulldata[i].days!.contains(weekdays_[currentday])) {
+          list.add(fulldata[i]);
+        }
+      }
+    }
+
+  }
+
+  save() async {
+    String encodedData = jsonEncode(fulldata.map((e) => e.toJson()).toList());
+
+    final Directory directory = await getApplicationDocumentsDirectory();
+    final File file = File('${directory.path}/$name.txt');
+    await file.writeAsString(encodedData);
+  }
+
+  removeAt(int index) {
+    fulldata.removeAt(fulldata.indexOf(list[index]));
+
+    save();
+    showactivities();
+  }
+
+  sort() {
+    late List<int> lt = [];
+    late List<int> orig = [];
+
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].type == "alarm") {
+        final x = list[i].alarm!.hour * 60 + list[i].alarm!.minute;
+        lt.add(x);
+        orig.add(x);
+      } else {
+        final x = list[i].start!.hour * 60 + list[i].start!.minute;
+        lt.add(x);
+        orig.add(x);
+      }
+    }
+
+    lt.sort();
+
+    List<Activity> temp = [];
+    for (var i = 0; i < lt.length; i++) {
+      final index = orig.indexOf(lt[i]);
+      temp.add(list[index]);
+    }
+
+    list = temp;
+  }
+
+  Map<String, double> datamap() {
+    sort();
+    late List<double> partsize = [];
+    colorList = [];
+    //late double tempstart =0;
+    late int tempend = 0;
+    //late double total = 0;
+
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].type == "alarm") {
+      } else {
+        if (list[i].startmin! > tempend) {
+          //habra un espacio blanco
+          final emptysize = (list[i].startmin! - tempend) / 1440;
+
+          colorList.add(const Color.fromARGB(14, 0, 0, 0));
+          partsize.add(emptysize);
+
+          partsize.add(list[i].timeinteval! / 1440);
+          colorList.add(list[i].color!);
+
+          tempend = list[i].endmin!;
+        } else if (list[i].startmin == tempend) {
+          // no habra espacio
+          partsize.add(list[i].timeinteval! / 1440);
+          colorList.add(list[i].color!);
+
+          tempend = list[i].endmin!;
+        } else if (list[i].startmin! < tempend) {
+          // hay un solapamiento
+          final solapsize = (tempend - list[i].startmin!) / 1440;
+          //final reducesolap = solapsize / 2;
+
+          final partsizelen = partsize.length;
+          partsize[partsizelen - 1] = partsize[partsizelen - 1] - solapsize;
+
+          partsize.add(solapsize);
+          colorList.add(const Color.fromARGB(255, 0, 0, 0));
+
+          partsize.add((list[i].timeinteval! / 1440) - solapsize);
+          colorList.add(list[i].color!);
+
+          tempend = list[i].endmin!;
+        }
+      }
+    }
+
+    if (tempend < 1440) {
+      partsize.add(((1440 - tempend) / 1440));
+      colorList.add(const Color.fromARGB(14, 0, 0, 0));
+    }
+
+    late Map<String, double> dataMap = {};
+
+    for (var i = 0; i < partsize.length; i++) {
+      dataMap.addEntries(<String, double>{'a$i': partsize[i]}.entries);
+    }
+
+    if (partsize.isEmpty) {
+      return {'a': 1};
+    } else {
+      return dataMap;
+    }
+  }
+
+  List<Color> colorsPie() {
+    return colorList;
+  }
+}
