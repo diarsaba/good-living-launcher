@@ -18,6 +18,7 @@ class ModalCubit extends Cubit<ModalState> {
       : super(ModalInitialState(Modal(
           type: TimeType.alarm,
           days: <Days>{},
+          selectedapps: [],
         )));
 
   void setName(String name) {
@@ -65,8 +66,8 @@ class ModalCubit extends Cubit<ModalState> {
   }
 
   void setRemoveAplication(int index) {
-    List<Application> newapps = state.modal.apps?.where((app) {
-          return app.packageName != app.packageName;
+    List<Application> newapps = state.modal.selectedapps?.where((app) {
+          return app.packageName != state.modal.selectedapps![index].packageName;
         }).toList() ??
         [];
 
@@ -81,6 +82,6 @@ class ModalCubit extends Cubit<ModalState> {
   }
 
   void setinitial() {
-    emit(ModalInitialState(Modal(type: TimeType.alarm, days: <Days>{}, datecode: state.modal.datecode, weekday: state.modal.weekday)));
+    emit(ModalInitialState(Modal(type: TimeType.alarm, days: <Days>{}, datecode: state.modal.datecode, weekday: state.modal.weekday, apps: state.modal.apps, selectedapps: [])));
   }
 }

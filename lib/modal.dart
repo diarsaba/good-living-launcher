@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:good_living_launcher/bloc/service_locator.dart';
 import 'package:good_living_launcher/colorpicker.dart';
+import 'package:good_living_launcher/dropdown.dart';
 
 import 'package:good_living_launcher/dropdownicon.dart';
 import 'package:good_living_launcher/iconshandler.dart';
@@ -161,8 +162,8 @@ class _ModalInputsState extends State<ModalInputs> {
                           const ColorPickerPage(),
 
                           const SizedBox(height: 5),
-                          // if (state.modal.type == TimeType.interval)
-                          //   const DropdownMenuExample(),
+                          if (state.modal.type == TimeType.interval)
+                            const DropdownMenuExample(),
                           
                           if (state.modal.type == TimeType.alarm)
                             const DropdownMenuIcons(),

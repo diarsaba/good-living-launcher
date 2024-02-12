@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 class Activities {
-  final List<Activity> viewtodo;
-  final List<Activity> viewmade;
+  // final List<Activity> viewtodo;
+  // final List<Activity> viewmade;
   final List<Activity> view;
 
   final List<Activity> all;
@@ -14,8 +14,9 @@ class Activities {
   final Map<String, double> datamap;
 
   Activities(
-      {required this.viewtodo,
-      required this.viewmade,
+      {
+      // required this.viewtodo,
+      // required this.viewmade,
       required this.all,
       required this.view,
       required this.colorlist,
@@ -30,8 +31,8 @@ class Activities {
     Map<String, double>? datamap,
   }) =>
       Activities(
-        viewtodo: viewtodo ?? this.viewtodo,
-        viewmade: viewmade ?? this.viewmade,
+        // viewtodo: viewtodo ?? this.viewtodo,
+        // viewmade: viewmade ?? this.viewmade,
         all: all ?? this.all,
         view: view ?? this.view,
         colorlist: colorlist ?? this.colorlist,

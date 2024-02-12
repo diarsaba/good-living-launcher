@@ -7,6 +7,7 @@ import 'package:flutter_remix/flutter_remix.dart';
 import 'package:good_living_launcher/bloc/activities/activities_cubit.dart';
 import 'package:good_living_launcher/iconshandler.dart';
 import 'package:good_living_launcher/modal.dart';
+import 'package:good_living_launcher/models/activity.dart';
 import 'package:pie_chart/pie_chart.dart';
 
 class Solar extends StatefulWidget {
@@ -17,7 +18,7 @@ class Solar extends StatefulWidget {
 }
 
 class _SolarState extends State<Solar> {
-  _SolarState() {}
+  
   IconsHandler iconhandler = IconsHandler();
   Timer? timer;
   double da = 2 * pi / 86400;
@@ -47,7 +48,6 @@ class _SolarState extends State<Solar> {
   double timeToAngleDay(TimeOfDay time) {
     return (time.hour * 60 * 60 + time.minute * 60) * da - 21600;
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +112,7 @@ class _SolarState extends State<Solar> {
                   centerY: centerY,
                   radius: radius,
                 ),
-                //...builder()
+                ...builder(state)
               ],
             ),
           ),
@@ -121,29 +121,28 @@ class _SolarState extends State<Solar> {
     );
   }
 
-  // List<Widget> builder() {
-  //   List<Widget> temp = [];
-  //   for (var i = 0; i < widget.activities.list.length; i++) {
-  //     late double angletime;
-  //     if (widget.activities.list[i].type == "alarm") {
-  //       angletime = timeToAngleDay(widget.activities.list[i].alarm!);
-  //       temp.add(Positioned(
-  //         left: (centerX + radiusIcon * cos(angletime)),
-  //         top: (centerY + radiusIcon * sin(angletime)),
-  //         child:  Icon(
-  //           iconhandler.mapicon[widget.activities.list[i].iconname]?.icon,
-  //           color: Colors.black,
-  //         ),
-  //       ));
-  //     }
-  //     //  else {
-  //     //   angletime = 21600;
-  //     // }
-  //   }
-  //   return temp;
-  // }
-
- 
+  List<Widget> builder(ActivitiesState state) {
+    List<Widget> temp = [];
+    for (var i = 0; i < state.activities.view.length; i++) {
+      late double angletime;
+      final activity = state.activities.view[i];
+      if (activity is ActivityAlarm) {
+        angletime = timeToAngleDay(activity.start);
+        temp.add(Positioned(
+          left: (centerX + radiusIcon * cos(angletime)),
+          top: (centerY + radiusIcon * sin(angletime)),
+          child: Icon(
+            iconhandler.mapicon[activity.iconname]?.icon,
+            color: Colors.black,
+          ),
+        ));
+      }
+      //  else {
+      //   angletime = 21600;
+      // }
+    }
+    return temp;
+  }
 }
 
 //The sun is separated on StatefulWidget to performs the application

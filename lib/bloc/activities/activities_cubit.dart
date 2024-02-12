@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:good_living_launcher/models/activity.dart';
 import 'package:good_living_launcher/models/modal.dart';
 
-
 import '../blocs.dart';
 
 part 'activities_state.dart';
@@ -12,8 +11,8 @@ part 'activities_state.dart';
 class ActivitiesCubit extends Cubit<ActivitiesState> {
   ActivitiesCubit()
       : super(ActivitiesInitialState(Activities(
-            viewtodo: [],
-            viewmade: [],
+            // viewtodo: [],
+            // viewmade: [],
             all: [],
             view: [],
             colorlist: [const Color.fromARGB(0, 0, 0, 0)],
@@ -78,7 +77,7 @@ class ActivitiesCubit extends Cubit<ActivitiesState> {
   //   emit(ActivitiesUpdateState(state.activities.copyWith(view: tempactivity)));
   // }
 
-  List<Activity> _sort(List<Activity> list){
+  List<Activity> _sort(List<Activity> list) {
     late List<int> temp = [];
     late List<int> orig = [];
 
@@ -100,7 +99,6 @@ class ActivitiesCubit extends Cubit<ActivitiesState> {
   }
 
   void _datamap() {
-
     final view = _sort(state.activities.view);
 
     late List<double> partsize = [];
@@ -197,7 +195,8 @@ class ActivitiesCubit extends Cubit<ActivitiesState> {
       }
     }).toList();
 
-    emit(ActivitiesUpdateState(state.activities.copyWith(viewtodo: _sort(todo), viewmade: _sort(made), view: view)));
+    emit(ActivitiesUpdateState(
+        state.activities.copyWith(view: [..._sort(todo), ..._sort(made)])));
 
     _datamap();
   }

@@ -17,19 +17,18 @@ class DropdownMenuExample extends StatefulWidget {
 class _DropdownMenuExampleState extends State<DropdownMenuExample> {
   final modalcubit = getIt<ModalCubit>();
 
-  //late Application dropdownValue = getIt<ModalCubit>().state.modal.apps!.first;
-
-  
+  late Application dropdownValue = getIt<ModalCubit>().state.modal.apps!.first;
+  //modalcubit.state.modal.apps!.isNotEmpty
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<ModalCubit, ModalState>(
-      builder: (context, state) {
+      builder: (_, __) {
         return Column(
           children: [
-            if (true) const Icon(FlutterRemix.eye_close_line),
-            if (state.modal.type == TimeType.interval &&
-                state.modal.apps!.isNotEmpty)
+            if (modalcubit.state.modal.selectedapps!.isEmpty) const Icon(FlutterRemix.eye_close_line),
+            if (modalcubit.state.modal.type == TimeType.interval &&
+                modalcubit.state.modal.selectedapps!.isNotEmpty)
               SizedBox(
                 height: 45,
                 child: ListView.builder(
@@ -39,10 +38,10 @@ class _DropdownMenuExampleState extends State<DropdownMenuExample> {
                       parent: AlwaysScrollableScrollPhysics(),
                     ),
                     scrollDirection: Axis.horizontal,
-                    itemCount: state.modal.apps!.length,
+                    itemCount: modalcubit.state.modal.selectedapps!.length,
                     itemBuilder: (BuildContext context, int index) {
                       final application =
-                          state.modal.apps![index] as ApplicationWithIcon;
+                          modalcubit.state.modal.selectedapps![index] as ApplicationWithIcon;
                       return Padding(
                         padding: const EdgeInsets.only(left: 8),
                         child: Container(
@@ -84,8 +83,8 @@ class _DropdownMenuExampleState extends State<DropdownMenuExample> {
                   child: DropdownButton(
                     underline: null,
                     menuMaxHeight: 300,
-                    //value: dropdownValue,
-                    items: state.modal.apps!.map(
+                    value: dropdownValue,
+                    items: modalcubit.state.modal.apps!.map(
                       (item) {
                         final application = item as ApplicationWithIcon;
                         return DropdownMenuItem(
@@ -107,8 +106,8 @@ class _DropdownMenuExampleState extends State<DropdownMenuExample> {
                     ).toList(),
                     onChanged: (value) {
                       setState(() {
-                        // dropdownValue = value!;
-                        // modalcubit.setAplication(value);
+                        dropdownValue = value!;
+                        modalcubit.setAplication(value);
                       });
                     },
                   ),
